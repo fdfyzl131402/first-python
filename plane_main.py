@@ -15,6 +15,8 @@ class PlaneGame(object):
         self.__create_sprites()
         # 4.设置定时器事件  - 创建敌机  1s
         pygame.time.set_timer(CREATE_ENEMY_EVENT, 1000)
+        # 5.英雄发射子弹事件
+        pygame.time.set_timer(HERO_FIRE_EVENT, 500)
 
     def __create_sprites(self):
 
@@ -59,6 +61,9 @@ class PlaneGame(object):
 
                 # 把敌机精灵添加到精灵组
                 self.enemy_group.add(enemy)
+            elif event.type == HERO_FIRE_EVENT:
+                self.hero.fire()
+
             # elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
             #     print("向右移动...")
 
@@ -66,10 +71,27 @@ class PlaneGame(object):
             keys_pressed = pygame.key.get_pressed()
             # 判断元组中对应的索引值 1
             if keys_pressed[pygame.K_RIGHT]:
-                print("向右移动...")
+                self.hero.speed = 2
+            elif keys_pressed[pygame.K_LEFT]:
+                self.hero.speed = -2
+            else:
+                self.hero.speed = 0
 
     def __check_collide(self):
-        pass
+
+        # 1.子弹击倒敌人
+        pygame.sprite.groupcollide(self.hero.bullets, self.enemy_group, True, True)
+
+        # 2.敌机撞击英雄
+        enemies = pygame.sprite.spritecollide(self.hero, self.enemy_group, True)
+
+        # 1.判断列表是否有内容
+        if len(enemies) > 0:
+
+            # 让英雄牺牲
+            self.hero.kill()
+            # 结束游戏
+            PlaneGame.__game_over()
 
     def __update_sprites(self):
         self.back_group.update()
@@ -80,6 +102,9 @@ class PlaneGame(object):
 
         self.hero_group.update()
         self.hero_group.draw(self.screen)
+
+        self.hero.bullets.update()
+        self.hero.bullets.draw(self.screen)
 
     @staticmethod
     def __game_over():
